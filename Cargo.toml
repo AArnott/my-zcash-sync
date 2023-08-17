@@ -1,0 +1,21 @@
+[package]
+name = "my-zcash-sync"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+"zcash-warpsync" = { path = "external/zwallet/native/zcash-sync", features = ["dart_ffi"] }
+
+[patch.crates-io]
+zcash_params = { path = "external/zwallet/native/zcash-params" }
+orchard = { path = "external/zwallet/orchard" }
+zcash_primitives = { path = "external/zwallet/librustzcash/zcash_primitives" }
+halo2_gadgets  = { git = "https://github.com/zcash/halo2.git", rev = "642924d614305d882cc122739c59144109f4bd3f" }
+halo2_proofs = { git = "https://github.com/zcash/halo2.git", rev = "642924d614305d882cc122739c59144109f4bd3f" }
+zcash_note_encryption = { path = "external/zwallet/librustzcash/components/zcash_note_encryption" }
+zcash_client_backend = { path = "external/zwallet/librustzcash/zcash_client_backend" }
+zcash_proofs = { path = "external/zwallet/librustzcash/zcash_proofs" }
+zcash_address = { path = "external/zwallet/librustzcash/components/zcash_address" }
+zcash_encoding = { path = "external/zwallet/librustzcash/components/zcash_encoding" }
