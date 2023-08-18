@@ -1,3 +1,0 @@
-[submodule "external/zwallet"]
-	path = external/zwallet
-	url = https://github.com/hhanh00/zwallet.git
