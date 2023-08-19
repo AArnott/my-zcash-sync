@@ -10,8 +10,3 @@ zingolib = { path = "./external/zingolib/zingolib", default-features = true }
 zingoconfig = { path = "./external/zingolib/zingoconfig", default-features = true }
 http = "*"
 lazy_static = "1.4.0"
-
-[dependencies.neon]
-version = "0.10"
-default-features = false
-features = ["napi-6"]
