@@ -1,7 +1,8 @@
 #[macro_use]
 extern crate lazy_static;
 
-use zingoconfig::{self, construct_lightwalletd_uri, ChainType, ZingoConfig};
+use http::Uri;
+use zingoconfig::{self, ChainType, ZingoConfig};
 use zingolib::{commands, lightclient::LightClient};
 
 use std::time::Duration;
@@ -16,13 +17,22 @@ lazy_static! {
 }
 
 fn main() {
-    let server_uri = "https://zcash.mysideoftheweb.com:9067/";
-    let seed = if wallet_exists(server_uri.to_string()) {
+    let server_uri: Uri = "https://zcash.mysideoftheweb.com:9067/".parse().unwrap();
+    let chain_type = ChainType::Mainnet;
+    let mut config = zingolib::load_clientconfig(
+        server_uri,
+        None, 
+        chain_type, 
+        true).unwrap();
+    config.wallet_name = "myapp-wallet.dat".into();
+    config.logfile_name = "myapp.debug.log".into();
+
+    let seed = if config.wallet_exists() {
         println!("Initializing existing wallet");
-        initialize_existing(server_uri.to_string())
+        initialize_existing(config)
     } else {
         println!("Initializing new wallet");
-        initialize_new(server_uri.to_string())
+        initialize_new(config)
     };
 
     println!("Initialize: {:?}", seed);
@@ -40,31 +50,13 @@ fn main() {
     ()
 }
 
-// Check if there is an existing wallet
-fn wallet_exists(server_uri: String) -> bool {
-    let server = construct_lightwalletd_uri(Some(server_uri));
-    let chaintype = ChainType::Mainnet;
-    let config = ZingoConfig::create_unconnected(chaintype, None);
-
-    config.wallet_exists()
-}
-
 /// Create a new wallet and return the seed for the newly created wallet.
-fn initialize_new(server_uri: String) -> String {
-    let server = construct_lightwalletd_uri(Some(server_uri));
-    let chaintype = ChainType::Mainnet;
-    let block_height = match zingolib::get_latest_block_height(server.clone())
+fn initialize_new(config: ZingoConfig) -> String {
+    let block_height = match zingolib::get_latest_block_height(config.lightwalletd_uri.as_ref().read().unwrap().clone())
         .map_err(|e| format! {"Error: {e}"})
     {
         Ok(height) => height,
         Err(e) => return e,
-    };
-
-    let config = match zingolib::load_clientconfig(server, None, chaintype, true) {
-        Ok(c) => c,
-        Err(e) => {
-            return format!("Error: {}", e);
-        }
     };
 
     let lightclient = match LightClient::new(&config, block_height.saturating_sub(100)) {
@@ -94,17 +86,7 @@ fn initialize_new(server_uri: String) -> String {
 }
 
 // Initialize a new lightclient and store its value
-fn initialize_existing(server_uri: String) -> String {
-    let server = construct_lightwalletd_uri(Some(server_uri));
-    let chaintype = ChainType::Mainnet;
-
-    let config = match zingolib::load_clientconfig(server, None, chaintype, true) {
-        Ok(c) => c,
-        Err(e) => {
-            return format!("Error: {}", e);
-        }
-    };
-
+fn initialize_existing(config: ZingoConfig) -> String {
     let lightclient = match LightClient::read_wallet_from_disk(&config) {
         Ok(l) => l,
         Err(e) => {
